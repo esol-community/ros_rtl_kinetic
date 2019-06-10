@@ -1,0 +1,423 @@
+diff -urpN src/class_loader/cmake/PocoConfig.cmake ros_kinetic_mod/src/class_loader/cmake/PocoConfig.cmake
+--- src/class_loader/cmake/PocoConfig.cmake	2019-01-15 11:52:42.490589000 +0000
++++ src/class_loader/cmake/PocoConfig.cmake	2019-04-12 02:21:17.000000000 +0000
+@@ -199,6 +199,8 @@ ENDIF(NOT Poco_FOUND)
+ 
+ #I added this in to add "libdl" on non-Windows systems. Technically dl is only neded if the "Foundation" component is used,
+ #but i doesn't hurt to add it in anyway - mas
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(Poco_FOUND AND NOT WIN32)
+   LIST(APPEND Poco_LIBRARIES "dl")
+ endif(Poco_FOUND AND NOT WIN32)
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+diff -urpN src/cmake_modules/cmake/Modules/FindEigen.cmake src/cmake_modules/cmake/Modules/FindEigen.cmake
+--- src/cmake_modules/cmake/Modules/FindEigen.cmake	2019-01-15 11:52:42.490589000 +0000
++++ src/cmake_modules/cmake/Modules/FindEigen.cmake	2019-04-12 02:21:17.000000000 +0000
+@@ -56,8 +56,10 @@
+ ###############################################################################
+ 
+ find_package(PkgConfig)
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ pkg_check_modules(PC_EIGEN eigen3)
+ set(EIGEN_DEFINITIONS ${PC_EIGEN_CFLAGS_OTHER})
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ message(WARNING
+   "The FindEigen.cmake Module in the cmake_modules package is deprecated.\n"
+@@ -66,6 +68,7 @@ message(WARNING
+   "Check the FindEigen3.cmake Module for the resulting CMake variable names.\n"
+ )
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ find_path(EIGEN_INCLUDE_DIR Eigen/Core
+     HINTS ${PC_EIGEN_INCLUDEDIR} ${PC_EIGEN_INCLUDE_DIRS}
+           "${Eigen_ROOT_DIR}" "$ENV{EIGEN_ROOT_DIR}"
+@@ -73,7 +76,15 @@ find_path(EIGEN_INCLUDE_DIR Eigen/Core
+     PATHS "$ENV{PROGRAMFILES}/Eigen" "$ENV{PROGRAMW6432}/Eigen"
+           "$ENV{PROGRAMFILES}/Eigen 3.0.0" "$ENV{PROGRAMW6432}/Eigen 3.0.0"
+     PATH_SUFFIXES eigen3 include/eigen3 include)
+-
++else(NOT _CMAKE_MCOS_ROS_RTL)
++find_path(EIGEN_INCLUDE_DIR Eigen/Core
++    HINTS "${EIGEN_ROOT}" "$ENV{EIGEN_ROOT}"
++          "${Eigen_ROOT_DIR}" "$ENV{EIGEN_ROOT_DIR}"
++          ${PC_EIGEN_INCLUDEDIR} ${PC_EIGEN_INCLUDE_DIRS}  # Backwards Compatibility
++    PATHS "$ENV{PROGRAMFILES}/Eigen" "$ENV{PROGRAMW6432}/Eigen"
++          "$ENV{PROGRAMFILES}/Eigen 3.0.0" "$ENV{PROGRAMW6432}/Eigen 3.0.0"
++    PATH_SUFFIXES eigen3 include/eigen3 include)
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ set(EIGEN_INCLUDE_DIRS ${EIGEN_INCLUDE_DIR})
+ 
+ include(FindPackageHandleStandardArgs)
+diff -urpN src/cmake_modules/cmake/Modules/FindPoco.cmake src/cmake_modules/cmake/Modules/FindPoco.cmake
+--- src/cmake_modules/cmake/Modules/FindPoco.cmake	2019-01-15 11:52:42.490589000 +0000
++++ src/cmake_modules/cmake/Modules/FindPoco.cmake	2019-04-12 02:21:17.000000000 +0000
+@@ -199,6 +199,10 @@ ENDIF(NOT Poco_FOUND)
+ 
+ #I added this in to add "libdl" on non-Windows systems. Technically dl is only neded if the "Foundation" component is used,
+ #but i doesn't hurt to add it in anyway - mas
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(Poco_FOUND AND NOT WIN32)
+   LIST(APPEND Poco_LIBRARIES "dl")
+ endif(Poco_FOUND AND NOT WIN32)
++else(NOT _CMAKE_MCOS_ROS_RTL)
++  LIST(APPEND Poco_LIBRARIES)
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+diff -urpN src/dynamic_reconfigure/CMakeLists.txt src/dynamic_reconfigure/CMakeLists.txt
+--- src/dynamic_reconfigure/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/dynamic_reconfigure/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -20,6 +20,7 @@ add_service_files(
+ 
+ generate_messages(DEPENDENCIES std_msgs)
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+   find_package(rostest REQUIRED)
+   set(dynamic_reconfigure_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+@@ -27,6 +28,7 @@ if(CATKIN_ENABLE_TESTING)
+   generate_dynamic_reconfigure_options(cfg/Test.cfg)
+   add_subdirectory(test)
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ catkin_package(LIBRARIES dynamic_reconfigure_config_init_mutex
+                INCLUDE_DIRS include
+diff -urpN src/geometry/tf/CMakeLists.txt src/geometry/tf/CMakeLists.txt
+--- src/geometry/tf/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/geometry/tf/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -60,6 +60,7 @@ add_executable(static_transform_publishe
+ target_link_libraries(static_transform_publisher ${PROJECT_NAME})
+ 
+ # Tests
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING AND NOT ANDROID)
+ 
+ find_package(rostest REQUIRED)
+@@ -117,6 +118,7 @@ if(TARGET tests)
+ endif()
+ 
+ endif() # CATKIN_ENABLE_TESTING AND NOT ANDROID
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ install(DIRECTORY include/${PROJECT_NAME}/
+     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+diff -urpN src/geometry2/tf2/CMakeLists.txt src/geometry2/tf2/CMakeLists.txt
+--- src/geometry2/tf2/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/geometry2/tf2/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -32,6 +32,7 @@ install(DIRECTORY include/${PROJECT_NAME
+ )
+ 
+ # Tests
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+ 
+ catkin_add_gtest(test_cache_unittest test/cache_unittest.cpp)
+@@ -52,3 +53,4 @@ add_dependencies(tests speed_test)
+ add_dependencies(tests ${catkin_EXPORTED_TARGETS})
+ 
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+diff -urpN src/geometry2/tf2_eigen/CMakeLists.txt src/geometry2/tf2_eigen/CMakeLists.txt
+--- src/geometry2/tf2_eigen/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/geometry2/tf2_eigen/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -36,9 +36,11 @@ install(DIRECTORY include/${PROJECT_NAME
+         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+ 
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+-
+   catkin_add_gtest(tf2_eigen-test test/tf2_eigen-test.cpp)
+   target_link_libraries(tf2_eigen-test ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+ 
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
++
+diff -urpN src/geometry2/tf2_geometry_msgs/CMakeLists.txt src/geometry2/tf2_geometry_msgs/CMakeLists.txt
+--- src/geometry2/tf2_geometry_msgs/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/geometry2/tf2_geometry_msgs/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -29,6 +29,7 @@ install(DIRECTORY include/${PROJECT_NAME
+ 
+ catkin_python_setup()
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+ 
+ catkin_add_gtest(test_tomsg_frommsg test/test_tomsg_frommsg.cpp)
+@@ -48,3 +49,4 @@ endif()
+ 
+ 
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+diff -urpN src/geometry2/tf2_ros/CMakeLists.txt src/geometry2/tf2_ros/CMakeLists.txt
+--- src/geometry2/tf2_ros/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/geometry2/tf2_ros/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -1,9 +1,11 @@
+ cmake_minimum_required(VERSION 2.8.3)
+ project(tf2_ros)
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(NOT ANDROID)
+ set(TF2_PY tf2_py)
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ find_package(catkin REQUIRED COMPONENTS
+   actionlib
+diff -urpN src/laser_geometry/CMakeLists.txt src/laser_geometry/CMakeLists.txt
+--- src/laser_geometry/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/laser_geometry/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -32,12 +32,14 @@ include_directories(include
+ add_library(laser_geometry src/laser_geometry.cpp)
+ target_link_libraries(laser_geometry ${Boost_LIBRARIES} ${tf_LIBRARIES})
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+   catkin_add_gtest(projection_test test/projection_test.cpp)
+   target_link_libraries(projection_test laser_geometry)
+ 
+   catkin_add_nosetests(test/projection_test.py)
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ install(TARGETS laser_geometry
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+diff -urpN src/pcl_conversions/CMakeLists.txt src/pcl_conversions/CMakeLists.txt
+--- src/pcl_conversions/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/pcl_conversions/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -21,7 +21,10 @@ install(DIRECTORY include/${PROJECT_NAME
+ )
+ 
+ # Add gtest based cpp test target
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+   catkin_add_gtest(${PROJECT_NAME}-test test/test_pcl_conversions.cpp)
+   target_link_libraries(${PROJECT_NAME}-test ${catkin_LIBRARIES})
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
++
+diff -urpN src/perception_pcl/pcl_ros/CMakeLists.txt src/perception_pcl/pcl_ros/CMakeLists.txt
+--- src/perception_pcl/pcl_ros/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/perception_pcl/pcl_ros/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -188,7 +188,12 @@ add_executable(pointcloud_to_pcd tools/p
+ target_link_libraries(pointcloud_to_pcd ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN3_LIBRARY_DIRS} ${PCL_LIBRARIES})
+ 
+ add_executable(bag_to_pcd tools/bag_to_pcd.cpp)
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ target_link_libraries(bag_to_pcd pcl_ros_tf ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN3_LIBRARY_DIRS} ${PCL_LIBRARIES})
++else(NOT _CMAKE_MCOS_ROS_RTL)
++target_link_libraries(bag_to_pcd pcl_ros_tf ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${Eigen3_LIBRARY_DIRS} ${PCL_LIBRARIES} ${BZIP2_LIBRARIES})
++endif(NOT _CMAKE_MCOS_ROS_RTL)
++
+ 
+ add_executable(convert_pcd_to_image tools/convert_pcd_to_image.cpp)
+ target_link_libraries(convert_pcd_to_image ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${PCL_LIBRARIES})
+@@ -208,6 +213,7 @@ add_custom_target(download ALL DEPENDS d
+ ## Testing ##
+ #############
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+   find_package(rostest REQUIRED)
+   add_rostest_gtest(test_tf_message_filter_pcl tests/test_tf_message_filter_pcl.launch src/test/test_tf_message_filter_pcl.cpp)
+@@ -218,7 +224,7 @@ if(CATKIN_ENABLE_TESTING)
+   add_rostest(samples/pcl_ros/segmentation/sample_extract_clusters.launch ARGS gui:=false)
+   add_rostest(samples/pcl_ros/surface/sample_convex_hull.launch ARGS gui:=false)
+ endif(CATKIN_ENABLE_TESTING)
+-
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+diff -urpN src/ros/roslib/CMakeLists.txt src/ros/roslib/CMakeLists.txt
+--- src/ros/roslib/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/ros/roslib/CMakeLists.txt	2019-04-12 02:40:24.609544476 +0000
+@@ -1,12 +1,19 @@
+ cmake_minimum_required(VERSION 2.8.3)
+ project(roslib)
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ find_package(catkin REQUIRED COMPONENTS rospack)
+ catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES roslib
+   CATKIN_DEPENDS rospack
+   CFG_EXTRAS roslib-extras.cmake)
+-
++else(NOT _CMAKE_MCOS_ROS_RTL)
++find_package(catkin REQUIRED COMPONENTS)
++catkin_package(
++  INCLUDE_DIRS include
++  LIBRARIES roslib
++  CFG_EXTRAS roslib-extras.cmake)
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ find_package(Boost REQUIRED COMPONENTS thread)
+ 
+ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+@@ -24,7 +31,6 @@ if(NOT (APPLE OR WIN32 OR MINGW OR ANDRO
+   target_link_libraries(roslib rt)
+ endif()
+ 
+-
+ if(CMAKE_HOST_UNIX)
+   catkin_add_env_hooks(10.ros SHELLS sh DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
+ else()
+diff -urpN src/ros/roslib/src/package.cpp src/ros/roslib/src/package.cpp
+--- src/ros/roslib/src/package.cpp	2019-01-15 11:52:42.490589000 +0000
++++ src/ros/roslib/src/package.cpp	2019-04-12 02:41:37.160163995 +0000
+@@ -26,7 +26,9 @@
+  */
+ 
+ #include "ros/package.h"
++#if !defined _MCOS_ROS_RTL
+ #include "rospack/rospack.h"
++#endif /* if !defined _MCOS_ROS_RTL */
+ 
+ #include <cstdio>
+ #include <iostream>
+@@ -46,6 +48,7 @@ static boost::mutex librospack_mutex;
+ 
+ std::string command(const std::string& _cmd)
+ {
++#if !defined _MCOS_ROS_RTL
+   boost::mutex::scoped_lock lock(librospack_mutex);
+   // static allows caching of results in between calls (in same process)
+   static rospack::ROSPack rp;
+@@ -65,6 +68,7 @@ std::string command(const std::string& _
+     if ( !rp.is_quiet() )
+       std::cerr << "[rospack] " << e.what() << std::endl;
+   }
++#endif /* if !defined _MCOS_ROS_RTL */
+   return std::string("");
+ }
+ 
+diff -urpN src/ros_comm/roscpp/include/ros/rosout_appender.h src/ros_comm/roscpp/include/ros/rosout_appender.h
+--- src/ros_comm/roscpp/include/ros/rosout_appender.h	2018-12-12 09:13:20.627835000 +0000
++++ src/ros_comm/roscpp/include/ros/rosout_appender.h	2019-04-12 02:44:56.516624788 +0000
+@@ -62,6 +62,9 @@ public:
+   ~ROSOutAppender();
+ 
+   const std::string& getLastError() const;
++#if defined(_MCOS_ROS_RTL)
++  void shutdown();
++#endif /* #if defined(_MCOS_ROS_RTL) */
+ 
+   virtual void log(::ros::console::Level level, const char* str, const char* file, const char* function, int line);
+ 
+diff -urpN src/ros_comm/roscpp/src/libros/init.cpp src/ros_comm/roscpp/src/libros/init.cpp
+--- src/ros_comm/roscpp/src/libros/init.cpp	2018-12-12 09:13:20.627835000 +0000
++++ src/ros_comm/roscpp/src/libros/init.cpp	2019-04-12 02:21:17.000000000 +0000
+@@ -590,7 +590,15 @@ void shutdown()
+     g_internal_queue_thread.join();
+   }
+ 
++#if defined(_MCOS_ROS_RTL)
++  // Avoid to thread leak.
++  if (g_rosout_appender) {
++    g_rosout_appender->shutdown();
++    g_rosout_appender = 0;
++  }
++#else // defined(_MCOS_ROS_RTL)
+   g_rosout_appender = 0;
++#endif // defined(_MCOS_ROS_RTL)
+ 
+   if (g_started)
+   {
+diff -urpN src/ros_comm/roscpp/src/libros/rosout_appender.cpp src/ros_comm/roscpp/src/libros/rosout_appender.cpp
+--- src/ros_comm/roscpp/src/libros/rosout_appender.cpp	2018-12-12 09:13:20.627835000 +0000
++++ src/ros_comm/roscpp/src/libros/rosout_appender.cpp	2019-04-12 02:21:17.000000000 +0000
+@@ -56,7 +56,22 @@ ROSOutAppender::ROSOutAppender()
+ }
+ 
+ ROSOutAppender::~ROSOutAppender()
++// Avoid to thread leak.
++#if defined(_MCOS_ROS_RTL)
+ {
++  shutdown();
++}
++
++void ROSOutAppender::shutdown()
++{
++  if (shutting_down_)
++  {
++    return;
++  }
++#else // defined(_MCOS_ROS_RTL)
++{
++#endif // defined(_MCOS_ROS_RTL)
++
+   shutting_down_ = true;
+ 
+   {
+diff -urpN src/ros_comm/roscpp/src/libros/transport/transport_udp.cpp src/ros_comm/roscpp/src/libros/transport/transport_udp.cpp
+--- src/ros_comm/roscpp/src/libros/transport/transport_udp.cpp	2018-12-12 09:13:20.627835000 +0000
++++ src/ros_comm/roscpp/src/libros/transport/transport_udp.cpp	2019-04-12 02:47:26.478149732 +0000
+@@ -406,8 +406,18 @@ int32_t TransportUDP::read(uint8_t* buff
+         iov[0].iov_len = sizeof(header);
+         iov[1].iov_base = data_buffer_;
+         iov[1].iov_len = max_datagram_size_ - sizeof(header);
++#if defined(_MCOS_ROS_RTL)
++        struct cmsghdr msgctl;
++        struct msghdr msg = {
++          NULL, 0,
++          iov, 2,
++          &msgctl, sizeof(msgctl),
++        };
++        num_bytes = recvmsg(sock_, &msg, 0);
++#else /* #if defined(_MCOS_ROS_RTL) */
+         // Read a datagram with header
+         num_bytes = readv(sock_, iov, 2);
++#endif /* #if defined(_MCOS_ROS_RTL) */
+ #endif
+         if (num_bytes < 0)
+         {
+diff -urpN src/ros_comm/roslz4/CMakeLists.txt src/ros_comm/roslz4/CMakeLists.txt
+--- src/ros_comm/roslz4/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/ros_comm/roslz4/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -33,6 +33,7 @@ set_source_files_properties(
+ PROPERTIES COMPILE_FLAGS "-Wno-sign-compare")
+ target_link_libraries(roslz4 ${lz4_LIBRARIES} ${catkin_LIBRARIES})
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(NOT ANDROID)
+ # Python bindings
+ set(Python_ADDITIONAL_VERSIONS "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+@@ -48,6 +49,7 @@ set_target_properties(
+   LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${PYTHON_INSTALL_DIR}/roslz4)
+ target_link_libraries(roslz4_py roslz4 ${catkin_LIBRARIES} ${PYTHON_LIBRARIES})
+ endif()
++endif() # if(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ install(TARGETS roslz4
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+@@ -55,10 +57,12 @@ install(TARGETS roslz4
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(NOT ANDROID)
+ install(TARGETS roslz4_py
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_PYTHON_DESTINATION})
+ endif()
++endif() # if(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ install(DIRECTORY include/${PROJECT_NAME}
+   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+diff -urpN src/urdf/urdf/CMakeLists.txt src/urdf/urdf/CMakeLists.txt
+--- src/urdf/urdf/CMakeLists.txt	2019-01-15 11:52:42.490589000 +0000
++++ src/urdf/urdf/CMakeLists.txt	2019-04-12 02:21:17.000000000 +0000
+@@ -49,6 +49,7 @@ if(APPLE)
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+ endif(APPLE)
+ 
++if(NOT _CMAKE_MCOS_ROS_RTL)
+ if(CATKIN_ENABLE_TESTING)
+   find_package(catkin REQUIRED COMPONENTS rostest)
+   add_rostest_gtest(test_urdf_parser test/test_robot_model_parser.launch test/test_robot_model_parser.cpp)
+@@ -56,6 +57,7 @@ if(CATKIN_ENABLE_TESTING)
+ 
+   catkin_add_gtest(urdfdom_compatibility_test test/urdfdom_compatibility.cpp)
+ endif()
++endif(NOT _CMAKE_MCOS_ROS_RTL)
+ 
+ # no idea how CATKIN does this
+ # rosbuild_add_rostest(${PROJECT_SOURCE_DIR}/test/test_robot_model_parser.launch)
